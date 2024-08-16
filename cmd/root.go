@@ -3,13 +3,13 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/Lichthagel/shwelcome/image"
 	"github.com/charmbracelet/lipgloss"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"golang.org/x/term"
 )
 
 var cfgPath string
@@ -30,23 +30,19 @@ var rootCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		termWidth, _, err := term.GetSize(int(os.Stdout.Fd()))
+		styleSidePad := lipgloss.NewStyle().Padding(0, 1)
+
+		currentTime := time.Now()
+
+		imgBlock, err := image.PathToImgBlock(imgPath, imgWidth, imgHeight)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
 
-		imgPadded, err := image.PathToPaddedCode(imgPath, imgWidth, imgHeight)
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
+		timeRes := currentTime.Format(time.UnixDate)
 
-		center := lipgloss.NewStyle().Align(lipgloss.Center).Width(termWidth)
-
-		result := lipgloss.JoinHorizontal(lipgloss.Center, imgPadded, "Hello, World!")
-
-		result = center.Render(result)
+		result := lipgloss.JoinHorizontal(lipgloss.Center, styleSidePad.Render(imgBlock), styleSidePad.Render(timeRes))
 
 		fmt.Println(result)
 	},

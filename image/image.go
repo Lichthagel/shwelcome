@@ -103,7 +103,7 @@ func scrollDown(lines int) string {
 	return fmt.Sprintf("%v%v", strings.Repeat("\n", lines), ansi.CursorUp(lines))
 }
 
-func PathToPaddedCode(imagePath string, width uint, height uint) (string, error) {
+func PathToImgBlock(imagePath string, width uint, height uint) (string, error) {
 	image_base64, err := imageBase64(imagePath)
 	if err != nil {
 		return "", err
