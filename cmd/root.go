@@ -3,11 +3,13 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"path"
 	"time"
 
+	"github.com/Lichthagel/shwelcome/anki"
 	"github.com/Lichthagel/shwelcome/image"
+	catppuccin "github.com/catppuccin/go"
 	"github.com/charmbracelet/lipgloss"
-
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -25,8 +27,15 @@ var rootCmd = &cobra.Command{
 		imgWidth := viper.GetUint("image.width")
 		imgHeight := viper.GetUint("image.height")
 
-		if imgPath == "" {
-			fmt.Println("No image path provided")
+		ankiPath := viper.GetString("anki.path")
+
+		// if imgPath == "" {
+		// 	fmt.Println("No image path provided")
+		// 	os.Exit(1)
+		// }
+
+		if ankiPath == "" {
+			fmt.Println("No Anki path provided")
 			os.Exit(1)
 		}
 
@@ -34,15 +43,38 @@ var rootCmd = &cobra.Command{
 
 		currentTime := time.Now()
 
-		imgBlock, err := image.PathToImgBlock(imgPath, imgWidth, imgHeight)
+		timeRes := currentTime.Format(time.UnixDate)
+
+		renderedTime := lipgloss.NewStyle().Foreground(lipgloss.Color(catppuccin.Mocha.Overlay2().Hex)).PaddingBottom(1).Render(timeRes)
+
+		var imgBlock string
+
+		if imgPath != "" {
+			var err error
+			imgBlock, err = image.PathToImgBlock(imgPath, imgWidth, imgHeight)
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+		}
+
+		ankiCard, err := anki.RandomCard(ankiPath)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
 
-		timeRes := currentTime.Format(time.UnixDate)
+		renderAnkiCard := anki.RenderCard(ankiCard)
 
-		result := lipgloss.JoinHorizontal(lipgloss.Center, styleSidePad.Render(imgBlock), styleSidePad.Render(timeRes))
+		rightBlock := lipgloss.JoinVertical(0.5, renderedTime, renderAnkiCard)
+
+		var result string
+
+		if imgPath != "" {
+			result = lipgloss.JoinHorizontal(lipgloss.Center, styleSidePad.Render(imgBlock), styleSidePad.Render(rightBlock))
+		} else {
+			result = styleSidePad.Render(rightBlock)
+		}
 
 		fmt.Println(result)
 	},
@@ -67,9 +99,12 @@ func init() {
 	rootCmd.Flags().Uint("width", 0, "Width of the image")
 	rootCmd.Flags().Uint("height", 0, "Height of the image")
 
+	rootCmd.Flags().StringP("anki", "a", "", "Path to an Anki-exported text file")
+
 	viper.BindPFlag("image.path", rootCmd.Flags().Lookup("image"))
 	viper.BindPFlag("image.width", rootCmd.Flags().Lookup("width"))
 	viper.BindPFlag("image.height", rootCmd.Flags().Lookup("height"))
+	viper.BindPFlag("anki.path", rootCmd.Flags().Lookup("anki"))
 
 	viper.SetDefault("image.width", 20)
 	viper.SetDefault("image.height", 10)
@@ -82,13 +117,13 @@ func initConfig() {
 		viper.SetConfigFile(cfgPath)
 	} else {
 		// Find home directory.
-		home, err := os.UserHomeDir()
+		home, err := os.UserConfigDir()
 		cobra.CheckErr(err)
 
 		// Search config in home directory with name ".shwelcome" (without extension).
-		viper.AddConfigPath(home)
+		viper.AddConfigPath(path.Join(home, "shwelcome"))
 		viper.SetConfigType("yaml")
-		viper.SetConfigName(".shwelcome")
+		viper.SetConfigName("shwelcome.yml")
 	}
 
 	viper.AutomaticEnv() // read in environment variables that match
