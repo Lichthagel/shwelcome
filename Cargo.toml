@@ -4,3 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+base64 = "0.22.1"
+clap = { version = "4.5.16", features = ["derive"] }
+confy = "0.6.1"
+crossterm = "0.28.1"
+serde = { version = "1.0.208", features = ["derive"] }
