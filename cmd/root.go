@@ -66,7 +66,7 @@ var rootCmd = &cobra.Command{
 
 		renderAnkiCard := anki.RenderCard(ankiCard)
 
-		rightBlock := lipgloss.JoinVertical(0.5, renderedTime, renderAnkiCard)
+		rightBlock := lipgloss.JoinVertical(0, renderedTime, renderAnkiCard)
 
 		var result string
 
@@ -75,6 +75,8 @@ var rootCmd = &cobra.Command{
 		} else {
 			result = styleSidePad.Render(rightBlock)
 		}
+
+		result = lipgloss.NewStyle().Padding(1).PaddingBottom(0).Render(result)
 
 		fmt.Println(result)
 	},
