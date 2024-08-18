@@ -16,9 +16,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "".to_owned()
     };
 
-    let conn = Connection::open("/home/licht/.local/share/Anki2/Benutzer 1/collection.anki2")?;
+    let conn = Connection::open(cfg.anki.db_path)?;
 
-    let card = anki::random_card(conn, 1674145642111)?.render();
+    let card = anki::random_card(conn, cfg.anki.deck_id)?.render();
 
     if !image_code.is_empty() {
         let image_block = Block::new(image_code, cfg.image.width, cfg.image.height);

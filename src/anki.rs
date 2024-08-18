@@ -36,8 +36,6 @@ fn parse_line(line: &str) -> Result<AnkiCard, &'static str> {
 
     let err = "malformed anki card";
 
-    dbg!(line);
-
     parts.next().ok_or(err)?;
 
     let word = parts.next().ok_or(err)?.to_string();
