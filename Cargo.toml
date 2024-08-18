@@ -5,7 +5,12 @@ edition = "2021"
 
 [dependencies]
 base64 = "0.22.1"
+catppuccin = "2.4.0"
 clap = { version = "4.5.16", features = ["derive"] }
 confy = "0.6.1"
 crossterm = "0.28.1"
+itertools = "0.13.0"
+rand = "0.8.5"
+rusqlite = "0.32.1"
 serde = { version = "1.0.208", features = ["derive"] }
+yansi = "1.0.1"
