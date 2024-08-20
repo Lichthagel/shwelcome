@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"database/sql"
 	"fmt"
 	"os"
 	"path"
@@ -10,6 +11,7 @@ import (
 	"github.com/Lichthagel/shwelcome/image"
 	catppuccin "github.com/catppuccin/go"
 	"github.com/charmbracelet/lipgloss"
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -27,14 +29,15 @@ var rootCmd = &cobra.Command{
 		imgWidth := viper.GetUint("image.width")
 		imgHeight := viper.GetUint("image.height")
 
-		ankiPath := viper.GetString("anki.path")
+		ankiDbPath := viper.GetString("anki.db_path")
+		ankiDeckID := viper.GetUint64("anki.deck_id")
 
 		// if imgPath == "" {
 		// 	fmt.Println("No image path provided")
 		// 	os.Exit(1)
 		// }
 
-		if ankiPath == "" {
+		if ankiDbPath == "" {
 			fmt.Println("No Anki path provided")
 			os.Exit(1)
 		}
@@ -58,7 +61,13 @@ var rootCmd = &cobra.Command{
 			}
 		}
 
-		ankiCard, err := anki.RandomCard(ankiPath)
+		db, err := sql.Open("sqlite3", ankiDbPath)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
+		ankiCard, err := anki.RandomCard(db, ankiDeckID)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -101,12 +110,14 @@ func init() {
 	rootCmd.Flags().Uint("width", 0, "Width of the image")
 	rootCmd.Flags().Uint("height", 0, "Height of the image")
 
-	rootCmd.Flags().StringP("anki", "a", "", "Path to an Anki-exported text file")
+	rootCmd.Flags().StringP("anki-db", "a", "", "Path to an Anki-exported text file")
+	rootCmd.Flags().Uint64P("deck-id", "d", 0, "Deck ID to use")
 
 	viper.BindPFlag("image.path", rootCmd.Flags().Lookup("image"))
 	viper.BindPFlag("image.width", rootCmd.Flags().Lookup("width"))
 	viper.BindPFlag("image.height", rootCmd.Flags().Lookup("height"))
-	viper.BindPFlag("anki.path", rootCmd.Flags().Lookup("anki"))
+	viper.BindPFlag("anki.db_path", rootCmd.Flags().Lookup("anki-db"))
+	viper.BindPFlag("anki.deck_id", rootCmd.Flags().Lookup("deck-id"))
 
 	viper.SetDefault("image.width", 20)
 	viper.SetDefault("image.height", 10)

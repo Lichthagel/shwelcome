@@ -5,6 +5,7 @@ go 1.22.6
 require (
 	github.com/catppuccin/go v0.2.0
 	github.com/charmbracelet/lipgloss v0.12.1
+	github.com/mattn/go-sqlite3 v1.14.22
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
 )

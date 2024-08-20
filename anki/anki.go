@@ -2,12 +2,11 @@ package anki
 
 import (
 	"bufio"
+	"database/sql"
 	"fmt"
-	"math/rand"
 	"os"
 	"regexp"
 	"strings"
-	"time"
 
 	catppuccin "github.com/catppuccin/go"
 	"github.com/charmbracelet/lipgloss"
@@ -46,8 +45,8 @@ func RemoveHTMLTags(s string) string {
 }
 
 func ParseLine(line string) (AnkiCard, error) {
-	// split line by tab
-	parts := strings.Split(line, "\t")
+	// split line by x1f
+	parts := strings.Split(line, "\x1f")
 
 	// check if line has 3 parts
 	if len(parts) < 4 {
@@ -69,18 +68,36 @@ func ParseLine(line string) (AnkiCard, error) {
 	}, nil
 }
 
-func RandomCard(path string) (AnkiCard, error) {
-	lines, err := ReadLines(path)
+func RandomCard(db *sql.DB, deck_id uint64) (AnkiCard, error) {
+	rows, err := db.Query("SELECT notes.flds FROM cards JOIN notes ON cards.nid = notes.id WHERE cards.did = ? ORDER BY random() LIMIT 1", deck_id)
 	if err != nil {
 		return AnkiCard{}, err
 	}
+	defer rows.Close()
 
-	// pick a random line
-	idx := rand.New(rand.NewSource(time.Now().UnixNano())).Intn(len(lines))
-	line := lines[idx]
+	var flds string
+	if rows.Next() {
+		err = rows.Scan(&flds)
+		if err != nil {
+			return AnkiCard{}, err
+		}
+	}
 
-	return ParseLine(line)
+	return ParseLine(flds)
 }
+
+// func RandomCard(path string) (AnkiCard, error) {
+// 	lines, err := ReadLines(path)
+// 	if err != nil {
+// 		return AnkiCard{}, err
+// 	}
+
+// 	// pick a random line
+// 	idx := rand.New(rand.NewSource(time.Now().UnixNano())).Intn(len(lines))
+// 	line := lines[idx]
+
+// 	return ParseLine(line)
+// }
 
 func RenderTranslation(translation string) string {
 	styleType := lipgloss.NewStyle().Foreground(lipgloss.Color(catppuccin.Mocha.Subtext0().Hex)).Italic(true)
